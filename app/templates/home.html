@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Completion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+</head>
+
+<body>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <div id="input-container">
+            <input type="text" id="user-input" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        function sendMessage() {
+            const chatBox = document.getElementById('chat-box');
+            const userInput = document.getElementById('user-input');
+            const messageText = userInput.value;
+
+            if (messageText.trim() === '') {
+                return;
+            }
+
+            // Display the user's message
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user-message';
+            userMessage.textContent = messageText;
+            chatBox.appendChild(userMessage);
+
+            // Clear the input field
+            userInput.value = '';
+
+            // Scroll to the bottom of the chat box
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Send the user's message to the Flask server for processing
+            fetch('{{ endpoint_chat }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ chat_completion: messageText })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Display the processed response from the server
+                    const botMessage = document.createElement('div');
+                    botMessage.className = 'message bot-message';
+                    botMessage.textContent = data.response;
+                    chatBox.appendChild(botMessage);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+</body>
+
+</html>
