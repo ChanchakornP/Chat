@@ -8,5 +8,4 @@ homepage = Blueprint(
 
 @homepage.route("/")
 def index():
-    endpoint_chat = url_for("chat.chat_interface")
-    return Markup(render_template("home.html", endpoint_chat=endpoint_chat))
+    return Markup(render_template("home.html"))
