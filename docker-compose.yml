@@ -1,0 +1,24 @@
+services:
+  web:
+    build: app
+    ports:
+      - "8000:5000"
+    networks:
+      - frontend
+      - backend
+    environment:
+      - ENDPOINT_LLAMA3=http://ollama:11434/api/chat
+  ollama:
+    build: ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - backend
+
+networks:
+  frontend:
+    name: frontend
+    driver: bridge
+  backend:
+    name: backend
+    driver: bridge
