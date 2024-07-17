@@ -7,7 +7,7 @@ async function* readChunks(reader) {
     }
 }
 
-async function* textStreaming(url, messageText) {
+async function* textStreaming(url, chat_history) {
     const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -15,9 +15,7 @@ async function* textStreaming(url, messageText) {
         },
         body: JSON.stringify({
             model: 'llama3',
-            messages: [
-                { role: 'user', content: messageText }
-            ]
+            messages: chat_history
         })
     });
 

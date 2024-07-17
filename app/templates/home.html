@@ -38,17 +38,44 @@
             userMessage.textContent = messageText;
             chatBox.appendChild(userMessage);
 
+            // Init Assistant Element
+            let assistantMessage = document.createElement('div');
+            assistantMessage.className = 'message assistant-message';
+
             // Clear the input field
             userInput.value = '';
 
             // Scroll to the bottom of the chat box
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // Get and display the assistant's response
-            const stream = textStreaming(endpointChat, messageText);
-            let assistantMessage = document.createElement('div');
-            assistantMessage.className = 'message assistant-message';
+            let chatMessages = chatBox.getElementsByClassName('message');
+            let chat_history = []
+            for (let i = 0; i < chatMessages.length; i++) {
+                let message = chatMessages[i];
+                if (message.classList.contains('user-message')) {
+                    chat_history.push({
+                        role: 'user', content: message.innerText
+                    })
+                }
+                else if (message.classList.contains('assistant-message')) {
+                    chat_history.push({
+                        role: 'assistant', content: message.innerText
+                    })
+                }
+                else if (message.classList.contains('system-message')) {
+                    chat_history.push({
+                        role: 'system', content: message.innerText
+                    })
+                }
+                else {
+                    // do nothing
+                }
+            };
+            console.log(chat_history)
+
+            const stream = textStreaming(endpointChat, chat_history);
             chatBox.appendChild(assistantMessage);
+
 
             for await (const data of stream) {
                 const jsonObject = JSON.parse(data);
