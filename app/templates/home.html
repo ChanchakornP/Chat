@@ -19,13 +19,51 @@
             </form>
         </div>
     </div>
-    <script>let endpointChat = "{{ url_for('chat.chat_interface') }}";
-    </script>
     <script>
+        let endpointChat = "{{ url_for('chat.chat_interface') }}";
         let form = document.getElementById('chat-form');
-        form.addEventListener('submit', (event) => {
+        form.addEventListener('submit', async (event) => {
             event.preventDefault();
-            sendMessage()
+            const chatBox = document.getElementById('chat-box');
+            const userInput = document.getElementById('user-input');
+            const messageText = userInput.value.trim();
+
+            if (messageText === '') {
+                return;
+            }
+
+            // Display the user's message
+            const userMessage = document.createElement('div');
+            userMessage.className = 'message user-message';
+            userMessage.textContent = messageText;
+            chatBox.appendChild(userMessage);
+
+            // Clear the input field
+            userInput.value = '';
+
+            // Scroll to the bottom of the chat box
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Get and display the assistant's response
+            const stream = textStreaming(endpointChat, messageText);
+            let assistantMessage = document.createElement('div');
+            assistantMessage.className = 'message assistant-message';
+            chatBox.appendChild(assistantMessage);
+
+            for await (const data of stream) {
+                const jsonObject = JSON.parse(data);
+                const bot_message = jsonObject.message.content
+
+                assistantMessage.appendChild(document.createTextNode(bot_message));
+                // If there are linebreaks, append <br>
+                if (bot_message.split('\n').length > 1) {
+                    bot_message.split('\n').forEach(line => {
+                        let lineBreak = document.createElement('br');
+                        assistantMessage.appendChild(lineBreak);
+                    });
+                }
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
         });
     </script>
 </body>
