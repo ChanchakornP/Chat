@@ -26,4 +26,4 @@ class ChatHistory(db.Model):
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     chatmessage = mapped_column(String(1000))
     create_date: Mapped[datetime] = mapped_column(insert_default=func.now())
-    user = relationship("user", back_populates="chat_histories")
+    user = relationship("User", back_populates="chat_histories")

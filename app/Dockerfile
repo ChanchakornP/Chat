@@ -4,6 +4,7 @@ WORKDIR /FlaskApp
 RUN apk add --no-cache gcc musl-dev linux-headers
 
 COPY requirements.txt requirements.txt
+RUN pip install -U pip
 RUN pip install -r requirements.txt
 
 EXPOSE 5000

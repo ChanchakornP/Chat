@@ -10,17 +10,27 @@ from .models import ChatHistory, User, db
 mysql = Blueprint("mysql", __name__)
 
 
+@mysql.route("/users/verify", methods=["POST"])
+def verify_user():
+    data = request.json
+    username = data.get("username")
+    password = data.get("password")
+    authen_result = User.query.filter_by(username=username, password=password).first()
+    if not authen_result:
+        return jsonify({"error": "User not found"}), 404
+    return jsonify({"message": "User verified"}), 200
+
+
 @mysql.route("/users/create", methods=["POST"])
 def create_user():
     data = request.json
-    name = data.get("name")
-    fullname = data.get("fullname")
-    nickname = data.get("nickname")
+    username = data.get("username")
+    password = data.get("password")
 
-    if not name:
+    if not username or not password:
         return jsonify({"error": "Name is required"}), 400
 
-    new_user = User(name=name, fullname=fullname, nickname=nickname)
+    new_user = User(username=username, password=password)
     db.session.add(new_user)
     db.session.commit()
 
@@ -73,7 +83,7 @@ def create_user_chat():
 
 
 @mysql.route("/users/<string:user_id>/chats/<string:chat_id>", methods=["GET"])
-@mysql.route("/users/<string:user_id>", methods=["GET"])
+@mysql.route("/users/<string:user_id>/chats", methods=["GET"])
 def get_user_chat(user_id, chat_id):
     user = User.query.get(user_id)
     if not user:
