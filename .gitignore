@@ -142,3 +142,5 @@ cython_debug/
 # LLM models
 app/llm/*
 *.txt
+database/mysql/*
+*.DS_Store
