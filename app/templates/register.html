@@ -1,5 +1,81 @@
-<form action="/register" method="post">
-    <input autocomplete="off" autofocus name="username" type="text">
-    <input autocomplete="off" autofocus name="password" type="text">
-    <button type="submit">Register</button>
-</form>
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<title>Register</title>
+
+<div class="screen-1">
+    <svg class="logo" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1"
+        width="300" height="300" viewbox="0 0 640 480" xml:space="preserve">
+        <!-- SVG content (you can use the same SVG or modify it) -->
+    </svg>
+    <div class="email">
+        <label for="email">Email</label>
+        <div class="sec-2">
+            <ion-icon name="mail-outline"></ion-icon>
+            <input type="email" id="email" name="email" placeholder="email@gmail.com" />
+        </div>
+    </div>
+    <div class="password">
+        <label for="password">Password</label>
+        <div class="sec-2">
+            <ion-icon name="lock-closed-outline"></ion-icon>
+            <input class="pas" type="password" id="password" name="password" placeholder="············" />
+            <ion-icon class="show-hide" name="eye-outline"></ion-icon>
+        </div>
+    </div>
+    <div class="password">
+        <label for="password">Confirm Password</label>
+        <div class="sec-2">
+            <ion-icon name="lock-closed-outline"></ion-icon>
+            <input class="pas" type="password" id="confirm-password" name="confirm-password"
+                placeholder="············" />
+            <ion-icon class="show-hide" name="eye-outline"></ion-icon>
+        </div>
+    </div>
+    <button class="register">Register</button>
+    <div class="footer"><span>Login</span></div>
+</div>
+<script>
+    document.querySelector('.register').addEventListener('click', async (event) => {
+        event.preventDefault()
+        const email = document.querySelector('input[name="email"]').value;
+        const password = document.querySelector('input[name="password"]').value;
+        const confirmPassword = document.querySelector('input[name="confirm-password"]').value;
+        if (!email || !password || !confirmPassword) {
+            clearFields();
+            alert("All fields are required.");
+            return;
+        }
+        if (password !== confirmPassword) {
+            clearFields();
+            alert("Passwords do not match.");
+            return;
+        }
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ "username": email, "password": password })
+        });
+        if (response.status === 200) {
+            window.location.href = "{{ url_for('homepage.index')}}"
+        } else {
+            console.error('Failed to login. Status:', response.status);
+        }
+    });
+
+    document.querySelector('.footer').addEventListener('click', (event) => {
+        event.preventDefault();
+        window.location.href = "{{ url_for('homepage.login')}}";
+    });
+    function clearFields() {
+        document.querySelector('input[name="email"]').value = "";
+        document.querySelector('input[name="password"]').value = "";
+        document.querySelector('input[name="confirm-password"]').value = "";
+    }
+
+</script>
+{% endblock %}

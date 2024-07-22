@@ -60,8 +60,9 @@ def logout():
 @homepage.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+        data = request.get_json()
+        username = data.get("username")
+        password = data.get("password")
         create_user_url = current_app.config["BASE_URL"] + url_for("mysql.create_user")
         response = requests.post(
             create_user_url, json={"username": username, "password": password}

@@ -10,26 +10,37 @@
 </head>
 
 <body>
-    <div id="chat-container">
-        <div id="chat-box"></div>
-        <div id="input-container">
-            <form id="chat-form">
-                <input type="text" placeholder="Type a message..." id="user-input">
-                <input type="submit" value="Send">
-            </form>
+    <div class="header">
+        <div class="header-right">
+            <div class="logout">
+                <form action="{{ url_for('homepage.logout') }}" method="post">
+                    <button class="logout" type="submit">Logout</button>
+                </form>
+            </div>
         </div>
     </div>
-    <div id="logout">
-        <form action="{{ url_for('homepage.logout') }}" method="post">
-            <button class="logout" type="submit">Logout</button>
-        </form>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <h2>Chat History</h2>
+        </div>
+        <div class="chat-container">
+            <div class="chat-box"></div>
+            <div class="input-container">
+                <form class="chat-form">
+                    <input type="text" placeholder="Type a message..." class="user-input">
+                    <input type="submit" value="Send">
+                </form>
+            </div>
+        </div>
+
     </div>
     <script>
-        let form = document.getElementById('chat-form');
+        let form = document.getElementsByClassName('chat-form')[0];
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
-            const chatBox = document.getElementById('chat-box');
-            const userInput = document.getElementById('user-input');
+            const chatBox = document.getElementsByClassName('chat-box')[0];
+            const userInput = document.getElementsByClassName('user-input')[0];
             const messageText = userInput.value.trim();
             const endpointChat = "{{ url_for('chat.chat_interface') }}";
 
@@ -76,7 +87,6 @@
                     // do nothing
                 }
             };
-            console.log(chat_history)
 
             const stream = textStreaming(endpointChat, chat_history);
             chatBox.appendChild(assistantMessage);
@@ -98,6 +108,14 @@
             }
         });
 
+    </script>
+    <script>
+        document.querySelector(".logout").addEventListener('click', async (event) => {
+            const response = await fetch("{{ url_for('homepage.logout') }}", {
+                method: 'GET',
+            });
+            const result = await response.json();
+        });
     </script>
 </body>
 
