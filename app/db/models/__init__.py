@@ -17,13 +17,26 @@ class User(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     username = mapped_column(String(10), nullable=False, unique=True)
     password = mapped_column(String(10), nullable=False)
-    create_date: Mapped[datetime] = mapped_column(insert_default=func.now())
-    chat_histories = relationship("ChatHistory", back_populates="user")
+    created_at: Mapped[datetime] = mapped_column(insert_default=func.now())
+    conversation = relationship("Conversation", back_populates="user")
 
 
-class ChatHistory(db.Model):
+class Conversation(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
-    chatmessage = mapped_column(String(1000))
-    create_date: Mapped[datetime] = mapped_column(insert_default=func.now())
-    user = relationship("User", back_populates="chat_histories")
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(insert_default=func.now())
+    user = relationship("User", back_populates="conversation")
+    message = relationship("Message", back_populates="conversation")
+
+
+class Message(db.Model):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    converstaion_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("conversation.id"), nullable=False
+    )
+
+    sender = mapped_column(String(100))
+    chat_message = mapped_column(String(1000))
+    created_at: Mapped[datetime] = mapped_column(insert_default=func.now())
+
+    conversation = relationship("Conversation", back_populates="message")

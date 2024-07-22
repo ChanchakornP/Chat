@@ -11,6 +11,7 @@
 
 <body>
     <div id="chat-container">
+        <div id="chat-box"></div>
         <div id="input-container">
             <form id="chat-form">
                 <input type="text" placeholder="Type a message..." id="user-input">
@@ -18,14 +19,19 @@
             </form>
         </div>
     </div>
+    <div id="logout">
+        <form action="{{ url_for('homepage.logout') }}" method="post">
+            <button class="logout" type="submit">Logout</button>
+        </form>
+    </div>
     <script>
-        let endpointChat = "{{ url_for('chat.chat_interface') }}";
         let form = document.getElementById('chat-form');
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
             const chatBox = document.getElementById('chat-box');
             const userInput = document.getElementById('user-input');
             const messageText = userInput.value.trim();
+            const endpointChat = "{{ url_for('chat.chat_interface') }}";
 
             if (messageText === '') {
                 return;
@@ -91,6 +97,7 @@
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
         });
+
     </script>
 </body>
 

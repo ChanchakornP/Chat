@@ -5,7 +5,7 @@ import uuid
 import requests
 from flask import Blueprint, Flask, jsonify, request
 
-from .models import ChatHistory, User, db
+from .models import Conversation, Message, User, db
 
 mysql = Blueprint("mysql", __name__)
 
@@ -51,7 +51,7 @@ def update_user_chat():
         return jsonify({"error": "Chat Messages not found"}), 404
 
     for message in chat_messages:
-        chat_history = ChatHistory(user_id=user_id, chatmessage=message)
+        chat_history = Message(user_id=user_id, chatmessage=message)
         db.session.add(chat_history)
 
     db.session.commit()
@@ -63,23 +63,43 @@ def create_user_chat():
     data = request.json
     user_id = data.get("user_id")
     chat_message = data.get("chat_message")
+    conversation_id = data.get("conversation_id")
+    sender = data.get("sender")
+
     if not user_id:
-        return jsonify({"error": "User ID is required"}), 400
+        return jsonify({"error": "user_id is required"}), 400
 
     if not chat_message:
-        return jsonify({"error": "Chat message is required"}), 400
+        return jsonify({"error": "chat_message is required"}), 400
 
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
+    if not sender:
+        return jsonify({"error": "sender is required"}), 400
 
-    chat_id = str(uuid.uuid4())
+    if not conversation_id:
+        new_conversation = Conversation(user_id=user_id)
+        db.session.add(new_conversation)
+        db.session.commit()
+        conversation_id = new_conversation.id
 
-    chat_history = ChatHistory(id=chat_id, user_id=user_id, chatmessage=chat_message)
+    else:
+        existing_conversation = Conversation.query.filter_by(id=conversation_id).first()
+        if not existing_conversation:
+            return jsonify({"error": "Conversation ID not found."})
+
+    chat_history = Message(
+        conversation_id=conversation_id,
+        sender=sender,
+        chat_message=chat_message,
+    )
     db.session.add(chat_history)
     db.session.commit()
 
-    return jsonify({"message": "Chat History is created"}), 201
+    return (
+        jsonify(
+            {"message": "Chat History is created", "conversation_id": conversation_id}
+        ),
+        201,
+    )
 
 
 @mysql.route("/users/<string:user_id>/chats/<string:chat_id>", methods=["GET"])
@@ -91,7 +111,7 @@ def get_user_chat(user_id, chat_id):
 
     if chat_id is None:
         # Return all chat messages for the user
-        chat_histories = ChatHistory.query.filter_by(user_id=user_id).all()
+        chat_histories = Message.query.filter_by(user_id=user_id).all()
         chat_messages = [
             {
                 "id": chat.id,
@@ -104,7 +124,7 @@ def get_user_chat(user_id, chat_id):
 
     else:
         # Return a specific message
-        chat_history = ChatHistory.query.filter_by(user_id=user_id, id=chat_id).first()
+        chat_history = Message.query.filter_by(user_id=user_id, id=chat_id).first()
         if not chat_history:
             return jsonify({"error": "Chat message not found"}), 404
 
@@ -123,7 +143,7 @@ def get_user_chat(user_id, chat_id):
 @mysql.route("/users/<string:user_id>/chats/<string:chat_id>", methods=["DELETE"])
 def delete_user_chat(user_id, chat_id):
     # Validate user_id and chat_id parameters
-    chat_history = ChatHistory.query.filter_by(id=chat_id, user_id=user_id).first()
+    chat_history = Message.query.filter_by(id=chat_id, user_id=user_id).first()
 
     if not chat_history:
         return (

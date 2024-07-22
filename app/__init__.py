@@ -14,12 +14,6 @@ def create_app():
     from .llama3.routes import chat
     from .main.routes import homepage
 
-    # app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-    #     "SQLALCHEMY_DATABASE_URI", "mysql+pymysql://user:password@localhost:3307/dbname"
-    # )
-    # app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    # app.config["SESSION_PERMANENT"] = False
-    # app.config["SESSION_TYPE"] = "filesystem"
     app.config.from_object(DevelopmentConfig)
     db.init_app(app)
 

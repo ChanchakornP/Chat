@@ -23,14 +23,17 @@ REGISTRANT = {}
 def index():
     if not session.get("username"):
         return redirect("/login")
-    return Markup(render_template("home.html"))
+    return render_template("home.html")
 
 
 @homepage.route("/login", methods=["GET", "POST"])
 def login():
+    if session.get("username"):
+        return redirect("/")
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+        data = request.get_json()
+        username = data.get("username")
+        password = data.get("password")
         if not username or not password:
             return jsonify({"error": "Please provide username and password"}), 405
         verify_url = current_app.config["BASE_URL"] + url_for("mysql.verify_user")
@@ -48,10 +51,10 @@ def login():
     return render_template("login.html")
 
 
-@homepage.route("/logout")
+@homepage.route("/logout", methods=["GET", "POST"])
 def logout():
     session.clear()
-    return redirect("/")
+    return redirect(url_for("homepage.login"))
 
 
 @homepage.route("/register", methods=["GET", "POST"])
