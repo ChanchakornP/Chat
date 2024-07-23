@@ -7,6 +7,7 @@
     <title>Chat Completion</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
     <script src="{{ url_for('static', filename='chatbot.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body>
@@ -23,9 +24,29 @@
     <div class="main-container">
         <div class="sidebar">
             <h2>Chat History</h2>
+            <ul>
+                {% for chat_message in chat_messages %}
+                <li onclick="window.location.href='http://localhost:5001/c/{{ chat_message.id }}'">
+                    {{ chat_message.id }}
+                </li>
+                {% endfor %}
+            </ul>
         </div>
         <div class="chat-container">
-            <div class="chat-box"></div>
+            <div class="chat-box">
+                {% for chat_message in chat_messages %}
+                {% if chat_message.id == chat_id %}
+                {% for messages in chat_message.messages %}
+                {% if messages.sender == 'test_user' %}
+                <div class="message user-message">{{ messages.chat_message }}</div>
+                {% else %}
+                <div class="message assistant-message">{{ messages.chat_message }}</div>
+                {% endif %}
+                {% endfor %}
+                {% endif %}
+                {% endfor %}
+            </div>
+
             <div class="input-container">
                 <form class="chat-form">
                     <input type="text" placeholder="Type a message..." class="user-input">
@@ -49,6 +70,7 @@
             }
 
             // Display the user's message
+            console.log(chatBox.hasChildNodes())
             const userMessage = document.createElement('div');
             userMessage.className = 'message user-message';
             userMessage.textContent = messageText;
@@ -91,21 +113,19 @@
             const stream = textStreaming(endpointChat, chat_history);
             chatBox.appendChild(assistantMessage);
 
+            let chat_response = ''
+            assistantMessage.appendChild(document.createTextNode(chat_response));
 
             for await (const data of stream) {
                 const jsonObject = JSON.parse(data);
-                const bot_message = jsonObject.message.content
+                const bot_message = jsonObject.message.content;
+                chat_response += bot_message;
+                const htmlContent = marked.parse(chat_response);
 
-                assistantMessage.appendChild(document.createTextNode(bot_message));
-                // If there are linebreaks, append <br>
-                if (bot_message.split('\n').length > 1) {
-                    bot_message.split('\n').forEach(line => {
-                        let lineBreak = document.createElement('br');
-                        assistantMessage.appendChild(lineBreak);
-                    });
-                }
+                assistantMessage.innerHTML = htmlContent;
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
+
         });
 
     </script>

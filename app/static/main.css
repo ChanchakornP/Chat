@@ -10,6 +10,7 @@ body {
 }
 
 
+
 .chat-container {
     display: flex;
     flex-direction: column;
@@ -88,6 +89,7 @@ body {
     word-wrap: break-word;
     align-self: flex-start;
     display: inline-flex;
+    flex-direction: column;
 }
 
 .input-container {

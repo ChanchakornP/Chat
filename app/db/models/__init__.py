@@ -31,7 +31,7 @@ class Conversation(db.Model):
 
 class Message(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    converstaion_id: Mapped[int] = mapped_column(
+    conversation_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("conversation.id"), nullable=False
     )
 

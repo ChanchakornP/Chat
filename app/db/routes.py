@@ -18,7 +18,9 @@ def verify_user():
     authen_result = User.query.filter_by(username=username, password=password).first()
     if not authen_result:
         return jsonify({"error": "User not found"}), 404
-    return jsonify({"message": "User verified"}), 200
+    user_id = authen_result.id
+
+    return jsonify({"message": "User verified", "user_id": user_id}), 200
 
 
 @mysql.route("/users/create", methods=["POST"])
@@ -103,7 +105,9 @@ def create_user_chat():
 
 
 @mysql.route("/users/<string:user_id>/chats/<string:chat_id>", methods=["GET"])
-@mysql.route("/users/<string:user_id>/chats", methods=["GET"])
+@mysql.route(
+    "/users/<string:user_id>/chats", methods=["GET"], defaults={"chat_id": None}
+)
 def get_user_chat(user_id, chat_id):
     user = User.query.get(user_id)
     if not user:
@@ -111,33 +115,31 @@ def get_user_chat(user_id, chat_id):
 
     if chat_id is None:
         # Return all chat messages for the user
-        chat_histories = Message.query.filter_by(user_id=user_id).all()
-        chat_messages = [
-            {
-                "id": chat.id,
-                "message": chat.chatmessage,
-                "create_date": chat.create_date,
-            }
-            for chat in chat_histories
-        ]
-        return jsonify({"user_id": user_id, "chat_messages": chat_messages})
-
+        chat_histories = Conversation.query.filter_by(user_id=user_id).all()
     else:
-        # Return a specific message
-        chat_history = Message.query.filter_by(user_id=user_id, id=chat_id).first()
-        if not chat_history:
+        chat_histories = [
+            Conversation.query.filter_by(user_id=user_id, id=chat_id).first()
+        ]
+        if not chat_histories:
             return jsonify({"error": "Chat message not found"}), 404
 
-        return jsonify(
-            {
-                "user_id": user_id,
-                "chat_message": {
-                    "id": chat_history.id,
-                    "message": chat_history.chatmessage,
-                    "create_date": chat_history.create_date,
-                },
-            }
-        )
+    chat_messages = [
+        {
+            "id": conversation.id,
+            "messages": [
+                {
+                    "id": message.id,
+                    "sender": message.sender,
+                    "chat_message": message.chat_message,
+                    "created_at": message.created_at,
+                }
+                for message in conversation.message
+            ],
+            "created_at": conversation.created_at,
+        }
+        for conversation in chat_histories
+    ]
+    return jsonify({"user_id": user_id, "chat_messages": chat_messages})
 
 
 @mysql.route("/users/<string:user_id>/chats/<string:chat_id>", methods=["DELETE"])

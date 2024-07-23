@@ -144,3 +144,4 @@ app/llm/*
 *.txt
 database/mysql/*
 *.DS_Store
+flask_session*
