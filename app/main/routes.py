@@ -21,15 +21,11 @@ homepage = Blueprint(
 REGISTRANT = {}
 
 
-def check_session():
-    if not session.get("username") and not session.get("user_id"):
-        return redirect("/login")
-
-
-@homepage.route("/c/<int:chat_id>", methods=["GET"])
+@homepage.route("/c/<string:chat_id>", methods=["GET"])
 @homepage.route("/", methods=["GET"], defaults={"chat_id": None})
 def index(chat_id):
-    check_session()
+    if not session.get("username") or not session.get("user_id"):
+        return redirect("/login")
     get_user_chat_url = current_app.config["BASE_URL"] + url_for(
         "mysql.get_user_chat", user_id=session.get("user_id")
     )

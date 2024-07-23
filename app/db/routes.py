@@ -3,7 +3,7 @@ import os
 import uuid
 
 import requests
-from flask import Blueprint, Flask, jsonify, request
+from flask import Blueprint, Flask, jsonify, request, session
 
 from .models import Conversation, Message, User, db
 
@@ -42,20 +42,30 @@ def create_user():
 @mysql.route("/users/chats", methods=["PUT"])
 def update_user_chat():
     data = request.json
-    user_id = data.get("user_id")
-    chat_messages = data.get("chat_messages")
+    user_id = session.get("user_id")
+    chat_id = data.get("chat_id")
+    message_raw = data.get("message")
 
-    user = User.query.get(user_id)
+    user = User.query.filter_by(id=user_id).first()
     # Error handling
     if not user:
         return jsonify({"error": "User not found"}), 404
-    if not chat_messages:
-        return jsonify({"error": "Chat Messages not found"}), 404
+    if not chat_id:
+        return jsonify({"error": "Chat ID not found"}), 404
+    if not message_raw:
+        return jsonify({"error": "Messages not found"}), 404
 
-    for message in chat_messages:
-        chat_history = Message(user_id=user_id, chatmessage=message)
-        db.session.add(chat_history)
+    conversation = Conversation.query.get(chat_id)
+    if not conversation:
+        return jsonify({"error": "Conversation not found"}), 404
 
+    for msg in message_raw:
+        message = Message(
+            conversation_id=chat_id,  # Associate message with the conversation
+            sender=msg.get("role"),
+            chat_message=msg.get("content"),
+        )
+        db.session.add(message)
     db.session.commit()
     return jsonify({"message": "Chat History updated"}), 201
 
@@ -63,43 +73,31 @@ def update_user_chat():
 @mysql.route("/users/chats", methods=["POST"])
 def create_user_chat():
     data = request.json
-    user_id = data.get("user_id")
-    chat_message = data.get("chat_message")
-    conversation_id = data.get("conversation_id")
-    sender = data.get("sender")
+    user_id = session.get("user_id")
+    message_raw = data.get("message")
 
-    if not user_id:
-        return jsonify({"error": "user_id is required"}), 400
+    user = User.query.filter_by(id=user_id).first()
+    # Error handling
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    if not message_raw:
+        return jsonify({"error": "Messages not found"}), 404
+    chat_id = str(uuid.uuid4())
+    message = []
+    for msg in message_raw:
+        message.append(
+            Message(
+                conversation_id=chat_id,  # Associate message with the conversation
+                sender=msg.get("role"),
+                chat_message=msg.get("content"),
+            )
+        )
 
-    if not chat_message:
-        return jsonify({"error": "chat_message is required"}), 400
-
-    if not sender:
-        return jsonify({"error": "sender is required"}), 400
-
-    if not conversation_id:
-        new_conversation = Conversation(user_id=user_id)
-        db.session.add(new_conversation)
-        db.session.commit()
-        conversation_id = new_conversation.id
-
-    else:
-        existing_conversation = Conversation.query.filter_by(id=conversation_id).first()
-        if not existing_conversation:
-            return jsonify({"error": "Conversation ID not found."})
-
-    chat_history = Message(
-        conversation_id=conversation_id,
-        sender=sender,
-        chat_message=chat_message,
-    )
-    db.session.add(chat_history)
+    new_conversation = Conversation(id=chat_id, user_id=user_id, message=message)
+    db.session.add(new_conversation)
     db.session.commit()
-
     return (
-        jsonify(
-            {"message": "Chat History is created", "conversation_id": conversation_id}
-        ),
+        jsonify({"message": "Chat History is created", "conversation_id": chat_id}),
         201,
     )
 

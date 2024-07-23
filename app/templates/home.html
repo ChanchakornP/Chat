@@ -25,6 +25,7 @@
         <div class="sidebar">
             <h2>Chat History</h2>
             <ul>
+                <li onclick="window.location.href='http://localhost:5001'"> New Chat </li>
                 {% for chat_message in chat_messages %}
                 <li onclick="window.location.href='http://localhost:5001/c/{{ chat_message.id }}'">
                     {{ chat_message.id }}
@@ -37,10 +38,12 @@
                 {% for chat_message in chat_messages %}
                 {% if chat_message.id == chat_id %}
                 {% for messages in chat_message.messages %}
-                {% if messages.sender == 'test_user' %}
+                {% if messages.sender == 'user' %}
                 <div class="message user-message">{{ messages.chat_message }}</div>
-                {% else %}
+                {% elif messages.sender == 'assistant' %}
                 <div class="message assistant-message">{{ messages.chat_message }}</div>
+                {% elif messages.sender == 'system' %}
+                {% else %}
                 {% endif %}
                 {% endfor %}
                 {% endif %}
@@ -70,7 +73,6 @@
             }
 
             // Display the user's message
-            console.log(chatBox.hasChildNodes())
             const userMessage = document.createElement('div');
             userMessage.className = 'message user-message';
             userMessage.textContent = messageText;
@@ -120,12 +122,42 @@
                 const jsonObject = JSON.parse(data);
                 const bot_message = jsonObject.message.content;
                 chat_response += bot_message;
+
+                // Convert response from LLM (markdown format) to HTML format
                 const htmlContent = marked.parse(chat_response);
 
                 assistantMessage.innerHTML = htmlContent;
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
+            chat_history.push({
+                role: 'assistant', content: chat_response
+            });
+            let chat_id = "{{ chat_id }}";
+            if (chat_id === null || chat_id === undefined || chat_id === "" || chat_id === "None") {
+                const response = await fetch("{{ url_for('mysql.create_user_chat') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chat_id: chat_id,
+                        message: chat_history,
+                    }),
+                })
+            }
+            else {
+                const response = await fetch("{{ url_for('mysql.update_user_chat') }}", {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chat_id: chat_id,
+                        message: chat_history,
+                    }),
+                })
 
+            }
         });
 
     </script>
