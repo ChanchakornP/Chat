@@ -24,14 +24,22 @@
     <div class="main-container">
         <div class="sidebar">
             <h2>Chat History</h2>
-            <ul>
-                <li onclick="window.location.href='http://localhost:5001'"> New Chat </li>
-                {% for chat_message in chat_messages %}
-                <li onclick="window.location.href='http://localhost:5001/c/{{ chat_message.id }}'">
+            <div class="chathistory" onclick="window.location.href='{{ url_for('homepage.index') }}'"> New Chat </div>
+            {% for chat_message in chat_messages %}
+            {% if chat_message.id == chat_id %}
+            <div class="chathistory chatlist-selected">
+                {{ chat_message.id }}
+            </div>
+
+            {% else %}
+            <div>
+                <div class="chathistory chatlist"
+                    onclick="window.location.href='{{ url_for('homepage.index', chat_id=chat_message.id) }}'">
                     {{ chat_message.id }}
-                </li>
-                {% endfor %}
-            </ul>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
         </div>
         <div class="chat-container">
             <div class="chat-box">
