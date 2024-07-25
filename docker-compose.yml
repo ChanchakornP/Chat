@@ -10,12 +10,12 @@ services:
       - BASE_URL=http://localhost:5000
       - ENDPOINT_LLAMA3=http://ollama:11434/api/chat
       - SQLALCHEMY_DATABASE_URI=mysql+pymysql://user:password@db:3306/dbname
-  # ollama:
-  #   build: ollama
-  #   ports:
-  #     - "11434:11434"
-  #   networks:
-  #     - backend
+  ollama:
+    build: ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - backend
   db:
     build: database
     environment:
@@ -29,6 +29,12 @@ services:
       - backend
     ports:
       - "3307:3306"
+  qdrant:
+    build: qdrant
+    ports:
+      - "6333:6333"
+    networks:
+      - backend
 
 networks:
   frontend:
