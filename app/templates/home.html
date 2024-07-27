@@ -12,30 +12,33 @@
 
 <body>
     <div class="header">
+        <div class="header-left">
+            <button class="button-style-2" type="submit"> <a href="{{url_for('homepage.index') }}">Chat</a> </button>
+            <button class="button-style-2" type="submit"> <a href="{{url_for('vectordb.index') }}">Metadata</a>
+            </button>
+        </div>
+
         <div class="header-right">
-            <div class="logout">
-                <form action="{{ url_for('homepage.logout') }}" method="post">
-                    <button class="logout" type="submit">Logout</button>
-                </form>
-            </div>
+            <button class="button-style-1" type="submit"> <a href="{{url_for('homepage.logout') }}">Logout</a> </button>
         </div>
     </div>
 
     <div class="main-container">
         <div class="sidebar">
             <h2>Chat History</h2>
-            <div class="chathistory" onclick="window.location.href='{{ url_for('homepage.index') }}'"> New Chat </div>
-            {% for chat_message in chat_messages %}
+            <div class="chathistory">
+                <a href="{{ url_for('homepage.index') }}">New Chat</a>
+            </div>
+            {% for chat_id in chat_ids %}
             {% if chat_message.id == chat_id %}
             <div class="chathistory chatlist-selected">
-                {{ chat_message.id }}
+                {{ chat_id }}
             </div>
 
             {% else %}
             <div>
-                <div class="chathistory chatlist"
-                    onclick="window.location.href='{{ url_for('homepage.index', chat_id=chat_message.id) }}'">
-                    {{ chat_message.id }}
+                <div class="chathistory chatlist">
+                    <a href="{{ url_for('homepage.index', chat_id=chat_id) }}">{{ chat_id }}</a>
                 </div>
             </div>
             {% endif %}
@@ -43,8 +46,6 @@
         </div>
         <div class="chat-container">
             <div class="chat-box">
-                {% for chat_message in chat_messages %}
-                {% if chat_message.id == chat_id %}
                 {% for messages in chat_message.messages %}
                 {% if messages.sender == 'user' %}
                 <div class="message user-message">{{ messages.chat_message }}</div>
@@ -52,8 +53,6 @@
                 <div class="message assistant-message">{{ messages.chat_message }}</div>
                 {% elif messages.sender == 'system' %}
                 {% else %}
-                {% endif %}
-                {% endfor %}
                 {% endif %}
                 {% endfor %}
             </div>
@@ -68,6 +67,19 @@
 
     </div>
     <script>
+        marked.setOptions({
+            breaks: true // Enables line breaks
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Convert markdown to HTML for messages already present on page load
+            let assistantMessages = document.getElementsByClassName('assistant-message');
+            for (let message of assistantMessages) {
+                let markdownText = message.innerText;
+                let htmlContent = marked.parse(markdownText);
+                message.innerHTML = htmlContent;
+            }
+        });
         let form = document.getElementsByClassName('chat-form')[0];
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -137,6 +149,7 @@
                 assistantMessage.innerHTML = htmlContent;
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
+            console.log(chat_response)
             chat_history.push({
                 role: 'assistant', content: chat_response
             });

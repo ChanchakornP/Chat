@@ -102,41 +102,47 @@ def create_user_chat():
     )
 
 
+@mysql.route("/users/<string:user_id>", methods=["GET"])
+def get_user_chat_id(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    chat_histories = (
+        Conversation.query.with_entities(Conversation.id)
+        .filter_by(user_id=user_id)
+        .all()
+    )
+    chat_ids = [id for id, in chat_histories]
+
+    return jsonify({"user_id": user_id, "chat_ids": chat_ids})
+
+
 @mysql.route("/users/<string:user_id>/chats/<string:chat_id>", methods=["GET"])
-@mysql.route(
-    "/users/<string:user_id>/chats", methods=["GET"], defaults={"chat_id": None}
-)
-def get_user_chat(user_id, chat_id):
+def get_user_chat_content(user_id, chat_id):
     user = User.query.get(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    if chat_id is None:
-        # Return all chat messages for the user
-        chat_histories = Conversation.query.filter_by(user_id=user_id).all()
-    else:
-        chat_histories = [
-            Conversation.query.filter_by(user_id=user_id, id=chat_id).first()
-        ]
-        if not chat_histories:
-            return jsonify({"error": "Chat message not found"}), 404
+    chat_histories = Conversation.query.filter_by(user_id=user_id, id=chat_id).first()
+    if not chat_histories:
+        return jsonify({"error": "Chat message not found"}), 404
 
-    chat_messages = [
-        {
-            "id": conversation.id,
-            "messages": [
-                {
-                    "id": message.id,
-                    "sender": message.sender,
-                    "chat_message": message.chat_message,
-                    "created_at": message.created_at,
-                }
-                for message in conversation.message
-            ],
-            "created_at": conversation.created_at,
-        }
-        for conversation in chat_histories
-    ]
+    chat_messages = {
+        "id": chat_histories.id,
+        "messages": [
+            {
+                "id": message.id,
+                "sender": message.sender,
+                "chat_message": message.chat_message,
+                "created_at": message.created_at,
+            }
+            for message in sorted(
+                chat_histories.message, key=lambda msg: msg.created_at
+            )
+        ],
+        "created_at": chat_histories.created_at,
+    }
+
     return jsonify({"user_id": user_id, "chat_messages": chat_messages})
 
 

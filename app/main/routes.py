@@ -26,12 +26,21 @@ REGISTRANT = {}
 def index(chat_id):
     if not session.get("username") or not session.get("user_id"):
         return redirect("/login")
-    get_user_chat_url = current_app.config["BASE_URL"] + url_for(
-        "mysql.get_user_chat", user_id=session.get("user_id")
+    get_chat_ids_url = current_app.config["BASE_URL"] + url_for(
+        "mysql.get_user_chat_id", user_id=session.get("user_id")
     )
-    response = requests.get(get_user_chat_url)
-    chat_messages = response.json().get("chat_messages")
-    return render_template("home.html", chat_messages=chat_messages, chat_id=chat_id)
+    chat_message = {}
+    response = requests.get(get_chat_ids_url)
+    chat_ids = response.json().get("chat_ids")
+    if chat_id:
+        get_chat_content_url = current_app.config["BASE_URL"] + url_for(
+            "mysql.get_user_chat_content",
+            user_id=session.get("user_id"),
+            chat_id=chat_id,
+        )
+        response_chat_content = requests.get(get_chat_content_url)
+        chat_message = response_chat_content.json().get("chat_messages")
+    return render_template("home.html", chat_message=chat_message, chat_ids=chat_ids)
 
 
 @homepage.route("/login", methods=["GET", "POST"])
