@@ -108,23 +108,6 @@ body {
     color: #fff;
 }
 
-.header .header-right {
-    margin-left: auto;
-}
-
-.header-right button {
-    background-color: #444;
-    border: none;
-    color: #fff;
-    padding: 10px 20px;
-    margin-left: 10px;
-    cursor: pointer;
-}
-
-.header-right button:hover {
-    background-color: #555;
-}
-
 .sidebar {
     width: 250px;
     background-color: #eee;
@@ -167,4 +150,83 @@ body {
 
 .sidebar .chatlist-selected {
     background-color: #868585;
+}
+
+/* General button styles */
+.button-style-1,
+.button-style-2 {
+    background-color: #4CAF50;
+    /* Green background */
+    border: none;
+    /* No border */
+    color: white;
+    /* White text */
+    padding: 10px 20px;
+    /* Padding */
+    text-align: center;
+    /* Centered text */
+    text-decoration: none;
+    /* No underline */
+    display: inline-block;
+    /* Inline block */
+    font-size: 16px;
+    /* Font size */
+    margin: 4px 2px;
+    /* Some margin */
+    cursor: pointer;
+    /* Pointer cursor on hover */
+    border-radius: 8px;
+    /* Rounded corners */
+    transition-duration: 0.4s;
+    /* Transition effect */
+}
+
+.button-style-1:hover,
+.button-style-2:hover {
+    background-color: white;
+    /* White background */
+    color: black;
+    /* Black text */
+    border: 2px solid #4CAF50;
+    /* Green border */
+}
+
+/* Additional specific styles for button-style-1 */
+.button-style-1 {
+    background-color: #008CBA;
+    /* Blue background */
+}
+
+.button-style-1:hover {
+    border: 2px solid #008CBA;
+    /* Blue border */
+}
+
+/* Additional specific styles for button-style-2 */
+.button-style-2 {
+    background-color: #f44336;
+    /* Red background */
+}
+
+.button-style-2:hover {
+    border: 2px solid #f44336;
+    /* Red border */
+}
+
+/* Style for header-left and header-right */
+.header-left,
+.header-right {
+    display: flex;
+    /* Flexbox layout */
+    align-items: center;
+    /* Center items vertically */
+}
+
+/* Ensure anchor tags inside buttons inherit button styles */
+.button-style-1 a,
+.button-style-2 a {
+    color: inherit;
+    /* Inherit text color */
+    text-decoration: none;
+    /* No underline */
 }

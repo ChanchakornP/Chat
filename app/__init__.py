@@ -13,6 +13,7 @@ def create_app():
     from .db.routes import mysql
     from .llama3.routes import chat
     from .main.routes import homepage
+    from .vectordb.routes import vectordb
 
     app.config.from_object(DevelopmentConfig)
     db.init_app(app)
@@ -20,6 +21,7 @@ def create_app():
     app.register_blueprint(homepage)
     app.register_blueprint(chat, url_prefix="/api")
     app.register_blueprint(mysql, url_prefix="/db")
+    app.register_blueprint(vectordb, url_prefix="/vectordb")
 
     with app.app_context():
         db.create_all()
