@@ -40,6 +40,8 @@ def index(chat_id):
         )
         response_chat_content = requests.get(get_chat_content_url)
         chat_message = response_chat_content.json().get("chat_messages")
+        if response_chat_content.status_code == 404:
+            return redirect("/")
     return render_template("home.html", chat_message=chat_message, chat_ids=chat_ids)
 
 
