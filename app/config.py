@@ -6,7 +6,16 @@ class Config(object):
 
     TESTING = False
     DB_SERVER = "localhost"
-    BASE_URL = os.getenv("BASE_URL", "http://localhost:5000")
+    BASE_URL = os.getenv("BASE_URL", "http://localhost:5002")
+    # SQLALCHEMY_DATABASE_URI = 'sqlite:///your-database.db'
+    # SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # SECRET_KEY = 'your-secret-key'
+    SERVER_NAME = "localhost:5002"  # Update this to your server name and port
+    APPLICATION_ROOT = "/"  # Update this if your app is not at the root
+    PREFERRED_URL_SCHEME = "http"  # Use 'https' if your app uses HTTPS
+    # Celery configurations
+    CELERY_BROKER_URL = "redis://localhost:6379/0"
+    CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
 
     @property
     def DATABASE_URI(self):  # Note: all caps
