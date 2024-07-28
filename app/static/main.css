@@ -230,3 +230,14 @@ body {
     text-decoration: none;
     /* No underline */
 }
+
+.icon-md,
+.icon-md-heavy {
+    flex-shrink: 0;
+    height: 18px;
+    width: 18px;
+}
+
+.icon-md {
+    stroke-width: 1.5;
+}

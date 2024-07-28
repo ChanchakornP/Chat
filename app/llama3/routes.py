@@ -5,7 +5,16 @@ from datetime import datetime
 
 import requests
 from celery import shared_task
-from flask import Blueprint, Response, current_app, redirect, request, session, url_for
+from flask import (
+    Blueprint,
+    Response,
+    current_app,
+    jsonify,
+    redirect,
+    request,
+    session,
+    url_for,
+)
 
 chat = Blueprint("chat", __name__)
 url = os.getenv("ENDPOINT_LLAMA3", "http://localhost:11434/api/chat")
@@ -23,18 +32,14 @@ def init_chat():
     )
     request_body = {
         "user_id": user_id,
-        "message": {
-            "conversation_id": chat_id,
-            "sender": "user",
-            "chat_message": user_prompt,
-        },
+        "message": [],
     }
     init_chat_history_db_response = requests.post(
         create_user_chat_url, json=request_body
     )
     if init_chat_history_db_response.status_code == 201:
         chat_id = init_chat_history_db_response.json().get("conversation_id")
-        return redirect(url_for("homepage.index", chat_id=chat_id))
+        return jsonify({"chat_id": chat_id})
 
 
 @chat.route("/chat", methods=["POST"])
@@ -45,7 +50,6 @@ def chat_interface():
     user_id = session.get("user_id")
     chat_history = get_chat_history(chat_id, user_id, user_prompt)
     buffer = []
-    update_chat_history_task.delay(chat_id, user_id, user_prompt, sender="user")
 
     def generate():
         with requests.post(
@@ -59,6 +63,7 @@ def chat_interface():
                     content = json.loads(chunk)["message"]["content"]
                     buffer.append(content)
                     yield content
+        update_chat_history_task.delay(chat_id, user_id, user_prompt, sender="user")
         update_chat_history_task.delay(chat_id, user_id, buffer, sender="assistant")
 
     return Response(generate(), content_type="text/plain")
@@ -69,28 +74,23 @@ def get_chat_history(chat_id, user_id, user_prompt):
         "mysql.get_user_chat_content", chat_id=chat_id, user_id=user_id
     )
     get_chat_history_response = requests.get(get_chat_history_url)
-    if get_chat_history_response == 200:
+    if get_chat_history_response.status_code == 200:
         messages = get_chat_history_response.json()["chat_messages"]["messages"]
-        sorted_messages = sorted(
-            messages,
-            key=lambda x: datetime.strptime(
-                x["created_at"], "%a, %d %b %Y %H:%M:%S GMT"
-            ),
-        )
+        # sorted_messages = sorted(
+        #     messages,
+        #     key=lambda x: datetime.strptime(
+        #         x["created_at"], "%a, %d %b %Y %H:%M:%S GMT"
+        #     ),
+        # )
         chat_history = [
             {
-                "role": (
-                    "user"
-                    if message["sender"] == "user"
-                    else "assistant" if message["sender"] == "assistant" else "system"
-                ),
+                "role": message["sender"],
                 "content": message["chat_message"],
             }
-            for message in sorted_messages
+            for message in messages
         ]
     else:
         chat_history = []
-
     chat_history.append({"role": "user", "content": user_prompt})
     return chat_history
 

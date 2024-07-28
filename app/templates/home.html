@@ -26,19 +26,43 @@
     <div class="main-container">
         <div class="sidebar">
             <h2>Chat History</h2>
-            <div class="chathistory">
-                <a href="{{ url_for('homepage.index') }}">New Chat</a>
-            </div>
+            <a href="{{ url_for('homepage.index') }}">
+                <div class="chathistory">
+                    New Chat
+                </div>
+            </a>
             {% for chat_id in chat_ids %}
             {% if chat_message.id == chat_id %}
+
             <div class="chathistory chatlist-selected">
                 {{ chat_id }}
             </div>
 
+            <button onclick="deleteChat('{{ user_id }}', '{{ chat_id }}')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+                    class="h-5 w-5 shrink-0">
+                    <path fill="currentColor" fill-rule="evenodd"
+                        d="M10.556 4a1 1 0 0 0-.97.751l-.292 1.14h5.421l-.293-1.14A1 1 0 0 0 13.453 4zm6.224 1.892-.421-1.639A3 3 0 0 0 13.453 2h-2.897A3 3 0 0 0 7.65 4.253l-.421 1.639H4a1 1 0 1 0 0 2h.1l1.215 11.425A3 3 0 0 0 8.3 22H15.7a3 3 0 0 0 2.984-2.683l1.214-11.425H20a1 1 0 1 0 0-2zm1.108 2H6.112l1.192 11.214A1 1 0 0 0 8.3 20H15.7a1 1 0 0 0 .995-.894zM10 10a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1m4 0a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1"
+                        clip-rule="evenodd"></path>
+                </svg>
+            </button>
+
             {% else %}
             <div>
                 <div class="chathistory chatlist">
-                    <a href="{{ url_for('homepage.index', chat_id=chat_id) }}">{{ chat_id }}</a>
+                    <a href="{{ url_for('homepage.index', chat_id=chat_id) }}">
+                        <div>
+                            {{ chat_id }}
+                        </div>
+                    </a>
+                    <button>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+                            class="h-5 w-5 shrink-0">
+                            <path fill="currentColor" fill-rule="evenodd"
+                                d="M10.556 4a1 1 0 0 0-.97.751l-.292 1.14h5.421l-.293-1.14A1 1 0 0 0 13.453 4zm6.224 1.892-.421-1.639A3 3 0 0 0 13.453 2h-2.897A3 3 0 0 0 7.65 4.253l-.421 1.639H4a1 1 0 1 0 0 2h.1l1.215 11.425A3 3 0 0 0 8.3 22H15.7a3 3 0 0 0 2.984-2.683l1.214-11.425H20a1 1 0 1 0 0-2zm1.108 2H6.112l1.192 11.214A1 1 0 0 0 8.3 20H15.7a1 1 0 0 0 .995-.894zM10 10a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1m4 0a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0v-5a1 1 0 0 1 1-1"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
             {% endif %}
@@ -46,6 +70,10 @@
         </div>
         <div class="chat-container">
             <div class="chat-box">
+                {% block content %}
+
+                {% endblock %}
+
                 {% for messages in chat_message.messages %}
                 {% if messages.sender == 'user' %}
                 <div class="message user-message">{{ messages.chat_message }}</div>
@@ -67,10 +95,8 @@
 
     </div>
     <script>
-        marked.setOptions({
-            breaks: true // Enables line breaks
-        });
-
+        let form = document.getElementsByClassName('chat-form')[0];
+        let submitButton = form.querySelector('input[type="submit"]');
         document.addEventListener("DOMContentLoaded", () => {
             // Convert markdown to HTML for messages already present on page load
             let assistantMessages = document.getElementsByClassName('assistant-message');
@@ -80,9 +106,10 @@
                 message.innerHTML = htmlContent;
             }
         });
-        let form = document.getElementsByClassName('chat-form')[0];
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
+            submitButton.disabled = true;
+
             const chatBox = document.getElementsByClassName('chat-box')[0];
             const userInput = document.getElementsByClassName('user-input')[0];
             const messageText = userInput.value.trim();
@@ -91,7 +118,25 @@
             if (messageText === '') {
                 return;
             }
+            let chat_id = "{{ chat_message.id }}"
+            if (chat_id === '') {
+                const init_response = await fetch("{{ url_for('chat.init_chat') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
 
+                    body: JSON.stringify({
+                        chat_id: "{{ chat_message.id }}",
+                        user_prompt: messageText
+                    })
+                });
+                const init_json = await init_response.json()
+                chat_id = init_json.chat_id
+            }
+            else {
+                chat_id = "{{ chat_message.id }}"
+            };
             // Display the user's message
             const userMessage = document.createElement('div');
             userMessage.className = 'message user-message';
@@ -108,76 +153,26 @@
             // Scroll to the bottom of the chat box
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            let chatMessages = chatBox.getElementsByClassName('message');
-            let chat_history = []
-            for (let i = 0; i < chatMessages.length; i++) {
-                let message = chatMessages[i];
-                if (message.classList.contains('user-message')) {
-                    chat_history.push({
-                        role: 'user', content: message.innerText
-                    })
-                }
-                else if (message.classList.contains('assistant-message')) {
-                    chat_history.push({
-                        role: 'assistant', content: message.innerText
-                    })
-                }
-                else if (message.classList.contains('system-message')) {
-                    chat_history.push({
-                        role: 'system', content: message.innerText
-                    })
-                }
-                else {
-                    // do nothing
-                }
-            };
-
-            const stream = textStreaming(endpointChat, chat_history);
+            const body = JSON.stringify({
+                chat_id: chat_id,
+                user_prompt: messageText
+            })
+            const stream = textStreaming(endpointChat, body);
             chatBox.appendChild(assistantMessage);
 
             let chat_response = ''
             assistantMessage.appendChild(document.createTextNode(chat_response));
 
             for await (const data of stream) {
-                const jsonObject = JSON.parse(data);
-                const bot_message = jsonObject.message.content;
-                chat_response += bot_message;
+                chat_response += data;
 
-                // Convert response from LLM (markdown format) to HTML format
                 const htmlContent = marked.parse(chat_response);
 
                 assistantMessage.innerHTML = htmlContent;
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
-            console.log(chat_response)
-            chat_history.push({
-                role: 'assistant', content: chat_response
-            });
-            let chat_id = "{{ chat_id }}";
-            if (chat_id === null || chat_id === undefined || chat_id === "" || chat_id === "None") {
-                const response = await fetch("{{ url_for('mysql.create_user_chat') }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        chat_id: chat_id,
-                        message: chat_history,
-                    }),
-                })
-            }
-            else {
-                const response = await fetch("{{ url_for('mysql.update_user_chat') }}", {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        chat_id: chat_id,
-                        message: chat_history,
-                    }),
-                })
-
+            if ("{{ chat_message.id }}" === '') {
+                window.location.href = "{{ url_for('homepage.index', chat_id='') }}" + chat_id;
             }
         });
 
@@ -190,6 +185,22 @@
             const result = await response.json();
         });
     </script>
+    <script>
+        async function deleteChat(userId, chatId) {
+            const url = "{{ url_for('mysql.delete_user_chat', chat_id='') }}" + chatId;
+            const response = await fetch(url, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                alert('Chat deleted successfully');
+                location.reload(); // Reload the page to update the chat history
+            } else {
+                alert('Error deleting chat');
+            }
+        }
+    </script>
+
 </body>
 
 </html>
