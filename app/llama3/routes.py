@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 
 import requests
-from celery import shared_task
+from celery import chain, shared_task
 from flask import (
     Blueprint,
     Response,
@@ -63,8 +63,14 @@ def chat_interface():
                     content = json.loads(chunk)["message"]["content"]
                     buffer.append(content)
                     yield content
-        update_chat_history_task.delay(chat_id, user_id, user_prompt, sender="user")
-        update_chat_history_task.delay(chat_id, user_id, buffer, sender="assistant")
+        chain(
+            update_chat_history_task.delay(
+                chat_id, user_id, user_prompt, sender="user"
+            ),
+            update_chat_history_task.delay(
+                chat_id, user_id, buffer, sender="assistant"
+            ),
+        )
 
     return Response(generate(), content_type="text/plain")
 

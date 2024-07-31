@@ -142,9 +142,7 @@ def get_user_chat_content(user_id, chat_id):
                 "chat_message": Markup(message.chat_message.replace("\n", "<br>")),
                 "created_at": message.created_at,
             }
-            for message in sorted(
-                chat_histories.message, key=lambda msg: msg.created_at
-            )
+            for message in chat_histories.message
         ],
         "created_at": chat_histories.created_at,
     }
