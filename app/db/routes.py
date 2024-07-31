@@ -147,7 +147,6 @@ def get_user_chat_content(user_id, chat_id):
         ],
         "created_at": chat_histories.created_at,
     }
-    # print(chat_messages)
     return jsonify({"user_id": user_id, "chat_messages": chat_messages})
 
 

@@ -31,6 +31,7 @@ def index(chat_id):
     )
     chat_message = {}
     response = requests.get(get_chat_ids_url)
+    print(response)
     chat_ids = response.json().get("chat_ids")
     if chat_id:
         get_chat_content_url = current_app.config["BASE_URL"] + url_for(

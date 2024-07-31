@@ -5,17 +5,14 @@ class Config(object):
     """Base config, uses staging database server."""
 
     TESTING = False
-    DB_SERVER = "localhost"
     BASE_URL = os.getenv("BASE_URL", "http://localhost:5002")
-    # SQLALCHEMY_DATABASE_URI = 'sqlite:///your-database.db'
-    # SQLALCHEMY_TRACK_MODIFICATIONS = False
-    # SECRET_KEY = 'your-secret-key'
-    SERVER_NAME = "localhost:5002"  # Update this to your server name and port
-    APPLICATION_ROOT = "/"  # Update this if your app is not at the root
-    PREFERRED_URL_SCHEME = "http"  # Use 'https' if your app uses HTTPS
+    if os.getenv("SERVER_NAME"):
+        SERVER_NAME = os.getenv("SERVER_NAME")
+    APPLICATION_ROOT = ""
+    PREFERRED_URL_SCHEME = "http"
     # Celery configurations
-    CELERY_BROKER_URL = "redis://localhost:6379/0"
-    CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+    CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
     @property
     def DATABASE_URI(self):  # Note: all caps

@@ -2,14 +2,39 @@ services:
   web:
     build: app
     ports:
-      - "8000:5000"
+      - "8000:8000"
     networks:
       - frontend
       - backend
     environment:
-      - BASE_URL=http://localhost:5000
+      - BASE_URL=http://localhost:8000
       - ENDPOINT_LLAMA3=http://ollama:11434/api/chat
       - SQLALCHEMY_DATABASE_URI=mysql+pymysql://user:password@db:3306/dbname
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - FLASK_ENV=development
+    command: flask run --debug --host=0.0.0.0 --port 8000
+    depends_on:
+      - db
+      - redis
+  celery:
+    build: app
+    networks:
+      - backend
+    environment:
+      # - BASE_URL=http://localhost:8000
+      # - ENDPOINT_LLAMA3=http://ollama:11434/api/chat
+      - SQLALCHEMY_DATABASE_URI=mysql+pymysql://user:password@db:3306/dbname
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SERVER_NAME=http://web:8000
+      - UPDATE_CHAT_HISTORY_URL=http://web:8000/db/users/chats # Work around for now, a bug with url_for() when using celery
+      # - FLASK_ENV=development
+    command: celery -A app.celery_app worker --loglevel=info
+    depends_on:
+      - db
+      - redis
+
   ollama:
     build: ollama
     ports:
@@ -35,7 +60,10 @@ services:
       - "6333:6333"
     networks:
       - backend
-
+  redis:
+    build: redis
+    networks:
+      - backend
 networks:
   frontend:
     name: frontend

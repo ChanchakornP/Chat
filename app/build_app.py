@@ -42,8 +42,8 @@ def create_app():
     Session(app)
     app.config.from_mapping(
         CELERY=dict(
-            broker_url="redis://localhost",
-            result_backend="redis://localhost",
+            broker_url=os.getenv("REDIS_URL", "redis://localhost"),
+            result_backend=os.getenv("REDIS_URL", "redis://localhost"),
             task_ignore_result=True,
         ),
     )

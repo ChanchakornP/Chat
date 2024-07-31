@@ -97,7 +97,9 @@ def get_chat_history(chat_id, user_id, user_prompt):
 
 @shared_task(name="update_chat_history_task")
 def update_chat_history_task(chat_id, user_id, message, sender):
-    update_chat_history_url = current_app.url_for("mysql.update_user_chat")
+    update_chat_history_url = os.getenv(
+        "UPDATE_CHAT_HISTORY_URL", "http://localhost:8000/db/users/chats"
+    )
     body = {
         "chat_id": chat_id,
         "chat_message": "".join(message),
