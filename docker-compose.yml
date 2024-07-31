@@ -17,53 +17,53 @@ services:
     depends_on:
       - db
       - redis
-  celery:
-    build: app
-    networks:
-      - backend
-    environment:
-      # - BASE_URL=http://localhost:8000
-      # - ENDPOINT_LLAMA3=http://ollama:11434/api/chat
-      - SQLALCHEMY_DATABASE_URI=mysql+pymysql://user:password@db:3306/dbname
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - SERVER_NAME=http://web:8000
-      - UPDATE_CHAT_HISTORY_URL=http://web:8000/db/users/chats # Work around for now, a bug with url_for() when using celery
-      # - FLASK_ENV=development
-    command: celery -A app.celery_app worker --loglevel=info
-    depends_on:
-      - db
-      - redis
+    celery:
+      build: app
+      networks:
+        - backend
+      environment:
+        # - BASE_URL=http://localhost:8000
+        # - ENDPOINT_LLAMA3=http://ollama:11434/api/chat
+        - SQLALCHEMY_DATABASE_URI=mysql+pymysql://user:password@db:3306/dbname
+        - CELERY_BROKER_URL=redis://redis:6379/0
+        - CELERY_RESULT_BACKEND=redis://redis:6379/0
+        - SERVER_NAME=http://web:8000
+        - UPDATE_CHAT_HISTORY_URL=http://web:8000/db/users/chats # Work around for now, a bug with url_for() when using celery
+        # - FLASK_ENV=development
+      command: celery -A app.celery_app worker --loglevel=info
+      depends_on:
+        - db
+        - redis
 
-  ollama:
-    build: ollama
-    ports:
-      - "11434:11434"
-    networks:
-      - backend
-  db:
-    build: database
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    volumes:
-      - ./database/mysql:/var/lib/mysql
-    networks:
-      - backend
-    ports:
-      - "3307:3306"
-  qdrant:
-    build: qdrant
-    ports:
-      - "6333:6333"
-    networks:
-      - backend
-  redis:
-    build: redis
-    networks:
-      - backend
+    ollama:
+      build: ollama
+      ports:
+        - "11434:11434"
+      networks:
+        - backend
+    db:
+      build: database
+      environment:
+        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        MYSQL_DATABASE: ${MYSQL_DATABASE}
+        MYSQL_USER: ${MYSQL_USER}
+        MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      volumes:
+        - ./database/mysql:/var/lib/mysql
+      networks:
+        - backend
+      ports:
+        - "3307:3306"
+    qdrant:
+      build: qdrant
+      ports:
+        - "6333:6333"
+      networks:
+        - backend
+    redis:
+      build: redis
+      networks:
+        - backend
 networks:
   frontend:
     name: frontend

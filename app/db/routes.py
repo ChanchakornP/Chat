@@ -4,6 +4,7 @@ import uuid
 
 import requests
 from flask import Blueprint, Flask, jsonify, request, session
+from markupsafe import Markup
 
 from .models import Conversation, Message, User, db
 
@@ -138,7 +139,7 @@ def get_user_chat_content(user_id, chat_id):
             {
                 "id": message.id,
                 "sender": message.sender,
-                "chat_message": message.chat_message,
+                "chat_message": Markup(message.chat_message.replace("\n", "<br>")),
                 "created_at": message.created_at,
             }
             for message in sorted(
